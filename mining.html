@@ -1,0 +1,2472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vulcano | Earn VLC</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Firebase SDK -->
+  <script type="module">
+      // Import the functions you need from the SDKs you need
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-analytics.js";
+      import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
+      import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot, collection, query, where, getDocs, limit, arrayUnion } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js";
+
+      // Your web app's Firebase configuration
+      const firebaseConfig = {
+          apiKey: "AIzaSyBEjeRSyKbpEmbNk0SYLUFPp3lbgP9x3Ow",
+          authDomain: "volcanobxpl.firebaseapp.com",
+          projectId: "volcanobxpl",
+          storageBucket: "volcanobxpl.firebasestorage.app",
+          messagingSenderId: "742861205377",
+          appId: "1:742861205377:web:bbe8a42b78c90354a64280",
+          measurementId: "G-G1KWGHLZES"
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+      
+      // Make auth available globally
+      window.auth = auth;
+      window.db = db;
+      window.onAuthStateChanged = onAuthStateChanged;
+      window.signOut = signOut;
+      window.getDoc = getDoc;
+      window.setDoc = setDoc;
+      window.doc = doc;
+      window.updateDoc = updateDoc;
+      window.onSnapshot = onSnapshot;
+      window.collection = collection;
+      window.query = query;
+      window.where = where;
+      window.getDocs = getDocs;
+      window.limit = limit;
+      window.arrayUnion = arrayUnion;
+  </script>
+  
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #1a1a2e;
+      color: #ffffff;
+      min-height: 100vh;
+      padding-bottom: 80px;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    header {
+      background: #21213e;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .menu {
+      font-size: 24px;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .menu:hover {
+      transform: scale(1.1);
+    }
+
+    .balance {
+      font-size: 16px;
+      font-weight: 500;
+      position: relative;
+    }
+
+    .balance strong {
+      font-size: 24px;
+      color: #f0b90b;
+      transition: color 0.3s ease;
+    }
+
+    .balance-increment {
+      position: absolute;
+      top: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #f0b90b;
+      font-size: 14px;
+      font-weight: 600;
+      text-shadow: 0 0 5px rgba(240, 185, 11, 0.8);
+      animation: floatUpBalance 0.8s ease-out forwards;
+      pointer-events: none;
+    }
+
+    @keyframes floatUpBalance {
+      0% {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+      }
+      100% {
+        transform: translateX(-50%) translateY(-30px);
+        opacity: 0;
+      }
+    }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .user-menu i {
+      margin-right: 8px;
+    }
+
+    .user-options {
+      display: none;
+      position: absolute;
+      top: 30px;
+      right: 0;
+      background: #2a2a4a;
+      border-radius: 8px;
+      padding: 10px;
+      z-index: 100;
+      min-width: 150px;
+    }
+
+    .user-options div {
+      padding: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .user-options div:hover {
+      background: #3a3a5a;
+    }
+
+    .user-menu:hover .user-options {
+      display: block;
+    }
+
+    /* Side Menu */
+    .side-menu {
+      position: fixed;
+      top: 0;
+      left: -300px;
+      width: 280px;
+      height: 100%;
+      background: #21213e;
+      z-index: 2000;
+      transition: left 0.3s ease;
+      padding: 20px;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+      overflow-y: auto;
+    }
+
+    .side-menu.active {
+      left: 0;
+    }
+
+    .side-menu-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #3a3a5a;
+    }
+
+    .side-menu-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #f0b90b;
+    }
+
+    .close-menu {
+      font-size: 24px;
+      cursor: pointer;
+      color: #aaa;
+      transition: color 0.2s;
+    }
+
+    .close-menu:hover {
+      color: #fff;
+    }
+
+    .side-menu-item {
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .side-menu-item:hover {
+      background: #2a2a4a;
+    }
+
+    .side-menu-item i {
+      font-size: 18px;
+      width: 24px;
+      text-align: center;
+      color: #b39fe6;
+    }
+
+    .side-menu-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1999;
+      display: none;
+    }
+
+    .side-menu-overlay.active {
+      display: block;
+    }
+
+ 
+ /* Main Section */
+.main {
+  position: relative;
+  text-align: center;
+  padding: 50px 20px;
+  color: #ffffff;
+  background: url('https://raw.githubusercontent.com/danvil33/Danvil-AI-/refs/heads/main/file_000000003b0461fa9270336988618e0d.png') no-repeat center center;
+  background-size: 100% 100%;
+ min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-bottom: 1px solid #2a2a4a;
+}
+    .main h2 {
+      margin: 0 0 15px;
+      font-size: 28px;
+      color: #f0b90b;
+      font-weight: 600;
+    }
+
+    .main .date {
+      font-size: 48px;
+      font-weight: 700;
+      margin: 10px 0;
+    }
+
+    .main p {
+      font-size: 16px;
+      background: rgba(0, 0, 0, 0.7);
+      display: inline-block;
+      padding: 10px 15px;
+      border-radius: 8px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      right: 20px;
+      top: 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 999;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar.hidden {
+      transform: translateX(100px);
+    }
+
+    .sidebar div {
+      background: #2a2a4a;
+      padding: 12px;
+      border-radius: 12px;
+      text-align: center;
+      font-size: 14px;
+      width: 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .sidebar div:hover {
+      background: #3a3a5a;
+      transform: translateY(-2px);
+    }
+
+    .sidebar div i {
+      font-size: 18px;
+      margin-bottom: 6px;
+    }
+
+    .sidebar .mining-counter {
+      font-size: 12px;
+      margin-top: 4px;
+      color: #f0b90b;
+    }
+
+    .sidebar div.active {
+      background: #3a3a5a;
+      box-shadow: 0 0 10px rgba(240, 185, 11, 0.5);
+    }
+
+    /* Vulcano Mining */
+    .vulcano-mining {
+      background: #21213e;
+      padding: 20px;
+      max-width: 800px;
+      margin: 20px auto;
+      border-radius: 12px;
+    }
+
+    .vulcano-mining h3 {
+      font-size: 24px;
+      color: #f0b90b;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .vulcano-mining p {
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 15px;
+      color: #ddd;
+    }
+
+    .vulcano-mining .highlight {
+      background: #2a2a4a;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #ffffff;
+      margin-bottom: 15px;
+    }
+
+    .vulcano-mining .cta {
+      display: inline-block;
+      background: #f0b90b;
+      color: #1a1a2e;
+      padding: 10px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    .vulcano-mining .cta:hover {
+      background: #d4a017;
+    }
+
+    /* New Wallet Section - Mobile App Style */
+    .wallet-section {
+      background: #f6f6f7;
+      color: #111;
+      width: 100%;
+      min-height: calc(100vh - 80px);
+      margin: 0;
+      border-radius: 0;
+      padding: 20px;
+      box-sizing: border-box;
+      display: none;
+      overflow-y: auto;
+    }
+
+    .wallet-card {
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 6px 18px rgba(21,21,21,0.06);
+      border: 1px solid #e7e7ea;
+      max-width: 450px;
+      margin: 0 auto;
+    }
+
+    .top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .network {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #9b9b9b;
+      font-weight: 600;
+    }
+
+    .network .dot {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(180deg, #ffd36b, #f0b90b);
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 -3px 6px rgba(0,0,0,0.06);
+    }
+
+    .network .down {
+      width: 10px;
+      height: 10px;
+      border-left: 2px solid rgba(0,0,0,0.15);
+      border-bottom: 2px solid rgba(0,0,0,0.15);
+      transform: rotate(-45deg);
+      margin-left: 8px;
+    }
+
+    .balance {
+      margin-top: 12px;
+    }
+
+    .amount {
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .addr-row {
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #9b9b9b;
+      font-size: 14px;
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: none;
+      padding: 6px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .copy-btn:active { transform: translateY(1px); }
+
+    .actions {
+      margin-top: 14px;
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      flex: 1;
+      border-radius: 10px;
+      padding: 12px 10px;
+      border: 1px solid #e7e7ea;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      background: rgba(240, 185, 11, 0.1);
+      border-color: #f0b90b;
+    }
+
+    .btn svg { opacity: 0.95; }
+
+    /* Tabs */
+    .tabs {
+      margin-top: 16px;
+      display: flex;
+      gap: 12px;
+      padding: 12px 6px 6px 6px;
+      background: transparent;
+      max-width: 450px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .tab {
+      font-weight: 700;
+      color: #9b9b9b;
+      position: relative;
+      padding-bottom: 10px;
+      cursor: pointer;
+      flex: 1;
+      text-align: center;
+    }
+
+    .tab.active {
+      color: #111;
+    }
+
+    .tab.active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 3px;
+      width: 60%;
+      background: #f0b90b;
+      border-radius: 4px;
+      margin: auto;
+    }
+
+    /* Token list area */
+    .tokens {
+      margin-top: 14px;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 10px;
+      border: 1px solid #e7e7ea;
+      max-width: 450px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .token-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 10px;
+      background: transparent;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .token-item:hover {
+      background: rgba(240, 185, 11, 0.05);
+    }
+
+    .token-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .token-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #ffd36b, #f0b90b);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 -3px 8px rgba(0,0,0,0.06);
+    }
+
+    .token-name {
+      font-weight: 700;
+    }
+
+    .token-right {
+      text-align: right;
+      color: #9b9b9b;
+    }
+
+    .token-right .value {
+      font-weight: 700;
+      color: #111;
+    }
+
+    .chev {
+      margin-left: 8px;
+      opacity: 0.45;
+    }
+
+    /* Make content under top area slightly spaced */
+    .main-gap { height: 18px; }
+
+    /* Profile Section - Enhanced Design */
+    .profile-section {
+      background: #21213e;
+      padding: 20px;
+      max-width: 800px;
+      margin: 20px auto;
+      border-radius: 16px;
+      display: none;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    .profile-section h3 {
+      font-size: 24px;
+      color: #b39fe6;
+      margin-bottom: 25px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 30px;
+      background: linear-gradient(135deg, #2a2a4a 0%, #1e1e3a 100%);
+      padding: 20px;
+      border-radius: 16px;
+      border: 1px solid #3a3a5a;
+    }
+
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #b39fe6 0%, #7e5bef 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      color: #fff;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(179, 159, 230, 0.3);
+    }
+
+    .profile-info h4 {
+      font-size: 20px;
+      margin-bottom: 5px;
+      color: #fff;
+    }
+
+    .profile-info p {
+      color: #aaa;
+      font-size: 14px;
+    }
+
+    .earnings-stats {
+      background: linear-gradient(135deg, #2a2a4a 0%, #1e1e3a 100%);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 25px;
+      border: 1px solid #3a3a5a;
+    }
+
+    .earnings-stats h4 {
+      font-size: 18px;
+      color: #b39fe6;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .stat-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 1px dashed #3a3a5a;
+    }
+
+    .stat-item:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .stat-label {
+      color: #aaa;
+      font-size: 14px;
+    }
+
+    .stat-value {
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .total-earnings {
+      background: rgba(240, 185, 11, 0.1);
+      padding: 20px;
+      border-radius: 12px;
+      margin-top: 25px;
+      border: 1px solid rgba(240, 185, 11, 0.2);
+      text-align: center;
+    }
+
+    .total-earnings div:first-child {
+      font-size: 14px;
+      color: #f0b90b;
+      margin-bottom: 10px;
+    }
+
+    .total-earnings div:last-child {
+      font-size: 28px;
+      font-weight: 700;
+      color: #f0b90b;
+      text-shadow: 0 0 10px rgba(240, 185, 11, 0.3);
+    }
+
+    /* Social Media Section */
+    .social-section {
+      background: linear-gradient(135deg, #2a2a4a 0%, #1e1e3a 100%);
+      padding: 25px;
+      border-radius: 16px;
+      margin-top: 25px;
+      border: 1px solid #3a3a5a;
+    }
+
+    .social-section h4 {
+      font-size: 18px;
+      color: #b39fe6;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .social-icons {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 15px;
+    }
+
+    .social-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      color: white;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .social-icon:hover {
+      transform: translateY(-5px);
+    }
+
+    .telegram {
+      background: linear-gradient(135deg, #0088cc, #34b7f1);
+    }
+
+    .twitter {
+      background: linear-gradient(135deg, #1da1f2, #1a91da);
+    }
+
+    .discord {
+      background: linear-gradient(135deg, #5865f2, #4752c4);
+    }
+
+    .website {
+      background: linear-gradient(135deg, #f0b90b, #d4a017);
+    }
+
+    /* Referral Section */
+    .referral-section {
+      background: #21213e;
+      padding: 20px;
+      max-width: 800px;
+      margin: 20px auto;
+      border-radius: 16px;
+      display: none;
+    }
+
+    .referral-section h3 {
+      font-size: 24px;
+      color: #b39fe6;
+      margin-bottom: 25px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .referral-tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #3a3a5a;
+    }
+
+    .referral-tab {
+      flex: 1;
+      padding: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+      text-align: center;
+    }
+
+    .referral-tab.active {
+      border-bottom: 2px solid #f0b90b;
+      color: #f0b90b;
+    }
+
+    .referral-tab:hover {
+      background: #3a3a5a;
+    }
+
+    .referral-tab-content {
+      display: none;
+      padding: 20px;
+      background: #2a2a4a;
+      border-radius: 12px;
+      margin-top: 15px;
+    }
+
+    .referral-tab-content.active {
+      display: block;
+    }
+
+    .referral-code {
+      background: #3a3a5a;
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: bold;
+      margin: 15px 0;
+      word-break: break-all;
+    }
+
+    .referral-input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      background: #3a3a5a;
+      color: white;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+
+    .referral-button {
+      background: #f0b90b;
+      color: #1a1a2e;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .referral-button:hover {
+      background: #d4a017;
+    }
+
+    .referral-stats {
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    .referral-stat {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    /* Action Sections */
+    .action-section {
+      background: #21213e;
+      padding: 20px;
+      max-width: 800px;
+      margin: 20px auto;
+      border-radius: 16px;
+      display: none;
+    }
+
+    .action-section h3 {
+      font-size: 24px;
+      color: #b39fe6;
+      margin-bottom: 25px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .action-input {
+      width: 100%;
+      padding: 12px 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      border: 1px solid #3a3a5a;
+      background: #1e1e3a;
+      color: #fff;
+      font-size: 16px;
+    }
+
+    .action-input:focus {
+      outline: none;
+      border-color: #b39fe6;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .action-button {
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      flex: 1;
+    }
+
+    .action-button.primary {
+      background: #f0b90b;
+      color: #1a1a2e;
+    }
+
+    .action-button.primary:hover {
+      background: #d4a017;
+      transform: translateY(-2px);
+    }
+
+    .action-button.secondary {
+      background: #3a3a5a;
+      color: #fff;
+    }
+
+    .action-button.secondary:hover {
+      background: #4a4a6a;
+      transform: translateY(-2px);
+    }
+
+    .migration-stats {
+      margin: 15px 0;
+      padding: 15px;
+      background: rgba(58, 58, 90, 0.3);
+      border-radius: 8px;
+    }
+
+    .migration-stat {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .migration-stat:last-child {
+      margin-bottom: 0;
+    }
+
+    .migration-stat-label {
+      color: #aaa;
+    }
+
+    .migration-stat-value {
+      font-weight: 600;
+    }
+
+    .migration-stat-value.available {
+      color: #f0b90b;
+    }
+
+    .address-display {
+      background: #3a3a5a;
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 16px;
+      margin: 15px 0;
+      word-break: break-all;
+      text-align: center;
+      font-family: monospace;
+    }
+
+    .qr-code {
+      width: 200px;
+      height: 200px;
+      background: #fff;
+      margin: 15px auto;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000;
+      font-size: 14px;
+    }
+
+    /* Footer */
+    .footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #21213e;
+      display: flex;
+      justify-content: space-around;
+      padding: 12px 0;
+      border-top: 1px solid #3a3a5a;
+      z-index: 1000;
+    }
+
+    .footer-item {
+      color: #ffffff;
+      font-size: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: color 0.2s;
+      position: relative;
+    }
+
+    .footer-item.active {
+      color: #b39fe6;
+    }
+
+    .footer-item i {
+      display: block;
+      font-size: 22px;
+      margin-bottom: 4px;
+    }
+
+    .footer-item:hover .tooltip {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .tooltip {
+      visibility: hidden;
+      opacity: 0;
+      position: absolute;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2a2a4a;
+      color: #ffffff;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      white-space: nowrap;
+      transition: opacity 0.2s, visibility 0.2s;
+      z-index: 10;
+    }
+
+    /* Notification */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #2a2a4a;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      max-width: 400px;
+      transform: translateX(120%);
+      transition: transform 0.3s ease;
+    }
+
+    .notification.show {
+      transform: translateX(0);
+    }
+
+    .notification.success {
+      border-left: 4px solid #4CAF50;
+    }
+
+    .notification.error {
+      border-left: 4px solid #f44336;
+    }
+
+    .notification.info {
+      border-left: 4px solid #2196F3;
+    }
+
+    .notification.warning {
+      border-left: 4px solid #FF9800;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .main {
+        height: 300px;
+      }
+
+      .main .date {
+        font-size: 36px;
+      }
+
+      .sidebar {
+        right: 10px;
+        top: 60px;
+      }
+
+      .sidebar div {
+        width: 50px;
+        font-size: 12px;
+      }
+
+      .vulcano-mining, .wallet-section, .profile-section, .referral-section, .action-section {
+        padding: 15px;
+      }
+
+      .profile-header {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .action-buttons {
+        flex-direction: column;
+      }
+
+      .action-button {
+        width: 100%;
+      }
+
+      .social-icons {
+        gap: 15px;
+      }
+
+      .social-icon {
+        width: 45px;
+        height: 45px;
+        font-size: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      header {
+        padding: 10px 15px;
+      }
+
+      .balance strong {
+        font-size: 20px;
+      }
+
+      .main h2 {
+        font-size: 24px;
+      }
+
+      .main p {
+        font-size: 14px;
+      }
+
+      .vulcano-mining h3, .wallet-section h3, .profile-section h3, .referral-section h3, .action-section h3 {
+        font-size: 20px;
+      }
+
+      .footer-item {
+        font-size: 10px;
+      }
+
+      .footer-item i {
+        font-size: 20px;
+      }
+
+      .sidebar .mining-counter {
+        font-size: 10px;
+      }
+
+      .balance-increment {
+        font-size: 12px;
+      }
+
+      .social-icons {
+        gap: 10px;
+      }
+
+      .social-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Side Menu -->
+  <div class="side-menu" id="side-menu">
+    <div class="side-menu-header">
+      <div class="side-menu-title">Menu</div>
+      <div class="close-menu" onclick="closeSideMenu()"><i class="fas fa-times"></i></div>
+    </div>
+    
+    <div class="side-menu-item" onclick="navigate('home')">
+      <i class="fas fa-home"></i>
+      <span>Home</span>
+    </div>
+    
+    <div class="side-menu-item" onclick="navigate('wallet')">
+      <i class="fas fa-wallet"></i>
+      <span>Wallet</span>
+    </div>
+    
+    <div class="side-menu-item" onclick="navigate('profile')">
+      <i class="fas fa-user"></i>
+      <span>Profile</span>
+    </div>
+    
+    <div class="side-menu-item" onclick="navigate('referral')">
+      <i class="fas fa-share"></i>
+      <span>Referrals</span>
+    </div>
+    
+    <div class="side-menu-item" onclick="openWhitepaper()">
+      <i class="fas fa-file-alt"></i>
+      <span>Whitepaper</span>
+    </div>
+    
+    <div class="side-menu-item" onclick="openCoreTeam()">
+      <i class="fas fa-users"></i>
+      <span>Core Team</span>
+    </div>
+    
+    <div class="side-menu-item" onclick="logout()">
+      <i class="fas fa-sign-out-alt"></i>
+      <span>Logout</span>
+    </div>
+  </div>
+  
+  <div class="side-menu-overlay" id="side-menu-overlay" onclick="closeSideMenu()"></div>
+
+  <header>
+    <div class="menu" onclick="toggleSideMenu()"><i class="fas fa-bars"></i></div>
+    <div class="balance"><strong id="vlc-balance">0.</strong>000 VLC</div>
+    <div class="user-menu">
+      <i class="fas fa-user"></i> <span id="current-user">User</span>
+      <div class="user-options">
+        <div onclick="navigate('profile')"><i class="fas fa-user"></i> Profile</div>
+        <div onclick="navigate('referral')"><i class="fas fa-share"></i> Referrals</div>
+        <div onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="main" id="main-content">
+
+  </div>
+
+  <div class="sidebar" id="sidebar">
+    <div onclick="navigate('referral')"><i class="fas fa-user-plus"></i>Join</div>
+    <div id="mining-btn" onclick="toggleMining()">
+      <i class="fas fa-bolt"></i>
+      <span id="mining-rate-display">1 VLC/h</span>
+      <span class="mining-counter" id="mining-counter">00:00:00</span>
+    </div>
+    <div onclick="navigate('referral')"><i class="fas fa-share"></i>Invite</div>
+  </div>
+
+  <div class="vulcano-mining" id="vulcano-content">
+    <h3>Vulcano: Powerful Mining</h3>
+    <p>Vulcano is a cutting-edge cryptocurrency mining platform designed to make powerful mining accessible to everyone. With our innovative technology, you can mine VLC tokens efficiently and securely from any device.</p>
+    <div class="highlight">
+      <strong>Why Vulcano?</strong> Vulcano represents power, energy, and transformation—qualities that resonate with our mission to create a decentralized, user-friendly financial ecosystem. Our platform combines advanced mining algorithms with an intuitive interface.
+    </div>
+    <p>Vulcano is more than just a mining platform. It's a complete ecosystem where users can earn, trade, and utilize VLC tokens across various applications. Our referral system rewards you for bringing new miners to the platform, creating a thriving community of cryptocurrency enthusiasts.</p>
+    <a href="#" class="cta" onclick="toggleMining()">Start Mining VLC</a>
+  </div>
+
+  <!-- New Wallet Section -->
+  <div class="wallet-section" id="wallet-content">
+    <div class="wallet-card">
+      <div class="top-row">
+        <div class="network" title="Selected network">
+          <div class="dot" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2L20 6.5V17.5L12 22L4 17.5V6.5L12 2Z" fill="white"/>
+              <path d="M12 22V13" stroke="#00000020" stroke-width="1.2"/>
+            </svg>
+          </div>
+          <div style="font-size:15px" id="network-name">VLC Network</div>
+          <div class="down" aria-hidden="true"></div>
+        </div>
+
+        <div style="width:26px;height:26px"></div>
+      </div>
+
+      <div class="balance">
+        <div class="amount" id="wallet-balance">$ 0.00</div>
+
+        <div class="addr-row" style="justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="font-weight:700;color:#9b9b9b" id="wallet-address">Loading...</div>
+            <button class="copy-btn" id="copyBtn" title="Copy address" aria-label="Copy address">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" >
+                <path d="M9 9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-4" stroke="#6b6b6b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                <rect x="9" y="3" width="11" height="11" rx="2" stroke="#6b6b6b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+
+          <div style="text-align:right;color:#b3b3b3;font-size:13px;">&nbsp;</div>
+        </div>
+
+        <div class="actions">
+          <button class="btn" id="receiveBtn" title="Receive">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M21 12V6a2 2 0 0 0-2-2H5v12h14a2 2 0 0 0 2-2z" stroke="#222" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M16 8h.01" stroke="#222" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Receive
+          </button>
+
+          <button class="btn" id="sendBtn" title="Send">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M22 2L11 13" stroke="#222" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M22 2L15 22l-4-9-9-4 20-7z" stroke="#222" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Send
+          </button>
+          
+          <button class="btn" id="migrateBtn" title="Migrate">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M17 8L21 12L17 16" stroke="#222" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3 12H21" stroke="#222" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Migrate
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="main-gap"></div>
+
+    <div>
+      <div class="tabs" role="tablist" aria-label="Sections">
+        <div class="tab active" id="tab-tokens" role="tab" aria-selected="true">Tokens</div>
+        <div class="tab" id="tab-history" role="tab">History</div>
+      </div>
+
+      <div class="tokens" id="tokensPanel" role="tabpanel" aria-labelledby="tab-tokens">
+        <div class="token-item" role="button" onclick="tokenClick()" aria-label="VLC token">
+          <div class="token-left">
+            <div class="token-icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" >
+                <g fill="#ffffff">
+                  <path d="M12 2L20 6.5V17.5L12 22L4 17.5V6.5L12 2Z" />
+                </g>
+              </svg>
+            </div>
+            <div>
+              <div class="token-name">VLC</div>
+            </div>
+          </div>
+
+          <div class="token-right">
+            <div class="value" id="vlc-token-balance">0</div>
+            <div class="muted-small">$ 0.00</div>
+          </div>
+
+          <div class="chev" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M9 18L15 12L9 6" stroke="#bdbdbd" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="tokens" id="historyPanel" role="tabpanel" aria-labelledby="tab-history" style="display:none;">
+        <div id="transaction-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="profile-section" id="profile-content">
+    <h3><i class="fas fa-user"></i> My Profile</h3>
+    
+    <div class="profile-header">
+      <div class="profile-avatar">
+        <i class="fas fa-user"></i>
+      </div>
+      <div class="profile-info">
+        <h4 id="username">Vulcano Miner</h4>
+        <p id="member-since">Member since May 2024</p>
+      </div>
+    </div>
+    
+    <div class="earnings-stats">
+      <h4><i class="fas fa-chart-line"></i> Earnings Overview</h4>
+      
+      <div class="stat-item">
+        <span class="stat-label">Total Earned</span>
+        <span class="stat-value" id="total-earned">0.00 VLC</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Mining Rewards</span>
+        <span class="stat-value" id="mining-rewards">0.00 VLC</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Referral Bonuses</span>
+        <span class="stat-value" id="referral-bonuses">0.00 VLC</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Referrals Count</span>
+        <span class="stat-value" id="referrals-count">0</span>
+      </div>
+      
+      <div class="total-earnings">
+        <div>Available Balance</div>
+        <div id="available-balance">0.00 VLC</div>
+      </div>
+    </div>
+
+    <!-- Social Media Section -->
+    <div class="social-section">
+      <h4><i class="fas fa-share-alt"></i> Join Our Community</h4>
+      <p style="text-align: center; color: #aaa; margin-bottom: 15px;">Stay updated with the latest news and announcements</p>
+      
+      <div class="social-icons">
+        <!-- Telegram -->
+        <div class="social-icon telegram" onclick="window.open('https://t.me/your-telegram-link', '_blank')">
+          <i class="fab fa-telegram"></i>
+        </div>
+        
+        <!-- Twitter -->
+        <div class="social-icon twitter" onclick="window.open('https://twitter.com/your-twitter-link', '_blank')">
+          <i class="fab fa-twitter"></i>
+        </div>
+        
+        <!-- Discord -->
+        <div class="social-icon discord" onclick="window.open('https://discord.gg/your-discord-link', '_blank')">
+          <i class="fab fa-discord"></i>
+        </div>
+        
+        <!-- Website -->
+        <div class="social-icon website" onclick="window.open('https://your-website.com', '_blank')">
+          <i class="fas fa-globe"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Referral Section -->
+  <div class="referral-section" id="referral-content">
+    <h3><i class="fas fa-share"></i> Referral Program</h3>
+    
+    <div class="referral-tabs">
+      <div class="referral-tab active" id="invite-tab-btn" onclick="switchReferralTab('invite')">Invite</div>
+      <div class="referral-tab" id="join-tab-btn" onclick="switchReferralTab('join')">Join</div>
+    </div>
+    
+    <div id="invite-tab" class="referral-tab-content active">
+      <h4>Invite Friends</h4>
+      <p>Share your referral code and earn 1 VLC per referral plus a 1 VLC/h mining boost!</p>
+      
+      <div class="referral-code" id="referral-code-display">Loading...</div>
+      
+      <button class="referral-button" onclick="copyReferralCode()">
+        <i class="fas fa-copy"></i> Copy Code
+      </button>
+      
+      <div class="referral-stats">
+        <div class="referral-stat">
+          <span>Total Referrals:</span>
+          <span id="total-referrals">0</span>
+        </div>
+        <div class="referral-stat">
+          <span>Earned from Referrals:</span>
+          <span id="earned-from-referrals">0 VLC</span>
+        </div>
+      </div>
+    </div>
+    
+    <div id="join-tab" class="referral-tab-content">
+      <h4>Join with Referral</h4>
+      <p>Enter a referral code to earn 1 VLC and support another user</p>
+      
+      <input type="text" class="referral-input" id="referral-code-input" placeholder="Enter referral code">
+      
+      <button class="referral-button" onclick="joinWithReferral()">
+        <i class="fas fa-user-plus"></i> Join
+      </button>
+      
+      <p style="margin-top: 15px; font-size: 14px; color: #aaa;">
+        You can only use a referral code once when you first join.
+      </p>
+    </div>
+  </div>
+
+  <!-- Migration Section -->
+  <div class="action-section" id="migration-content">
+    <h3><i class="fas fa-arrow-right"></i> Migrate VLC</h3>
+    
+    <div class="migration-stats">
+      <div class="migration-stat">
+        <span class="migration-stat-label">Mined Balance:</span>
+        <span class="migration-stat-value" id="migration-mined-balance">0.000 VLC</span>
+      </div>
+      <div class="migration-stat">
+        <span class="migration-stat-label">Available to Migrate:</span>
+        <span class="migration-stat-value available" id="migration-available-balance">0.000 VLC</span>
+      </div>
+    </div>
+    
+    <p>Enter the amount of VLC you want to migrate to your wallet</p>
+    <input type="number" class="action-input" id="migration-amount" placeholder="Amount to migrate" step="0.001" min="0">
+    
+    <div class="action-buttons">
+      <button class="action-button secondary" onclick="navigate('wallet')">Cancel</button>
+      <button class="action-button primary" onclick="processMigration()">Migrate</button>
+    </div>
+  </div>
+
+  <!-- Send Section -->
+  <div class="action-section" id="send-content">
+    <h3><i class="fas fa-paper-plane"></i> Send VLC</h3>
+    
+    <p>Enter recipient address and amount to send</p>
+    <input type="text" class="action-input" id="send-address" placeholder="Recipient VLC Address (0x...)">
+    <input type="number" class="action-input" id="send-amount" placeholder="Amount to send" step="0.001" min="0">
+    
+    <div class="action-buttons">
+      <button class="action-button secondary" onclick="navigate('wallet')">Cancel</button>
+      <button class="action-button primary" onclick="processSend()">Send</button>
+    </div>
+  </div>
+
+  <!-- Receive Section -->
+  <div class="action-section" id="receive-content">
+    <h3><i class="fas fa-wallet"></i> Receive VLC</h3>
+    
+    <p>Share this address to receive VLC tokens</p>
+    <div class="address-display" id="receive-address-display">Loading...</div>
+    
+    <div class="qr-code" id="qr-code">
+      QR Code<br>Placeholder
+    </div>
+    
+    <div class="action-buttons">
+      <button class="action-button primary" onclick="navigate('wallet')">Back to Wallet</button>
+    </div>
+  </div>
+
+  <!-- Notification -->
+  <div class="notification" id="notification">
+    <i class="fas fa-info-circle"></i>
+    <span id="notification-message">This is a notification</span>
+  </div>
+
+  <div class="footer">
+    <div class="footer-item active" onclick="navigate('home')"><i class="fas fa-home"></i><span>Home</span></div>
+    <div class="footer-item" onclick="navigate('wallet')"><i class="fas fa-wallet"></i><span>Wallet</span></div>
+    <div class="footer-item" onclick="navigate('profile')"><i class="fas fa-user"></i><span>Profile</span></div>
+  </div>
+
+  <script>
+    // Mining constants
+    const BASE_MINING_RATE_VLC_PER_HOUR = 1;
+    const MAX_MINING_HOURS = 24;
+    const MAX_MINING_SECONDS = MAX_MINING_HOURS * 3600;
+    const REFERRAL_REWARD = 1;
+    const MINING_RATE_INCREMENT = 1;
+
+    // Global variables
+    let userData = {
+      uid: null,
+      username: 'Vulcano Miner',
+      email: '',
+      createdAt: new Date().toISOString(),
+      minedVlc: 0,                    // TOTAL accumulated VLC from ALL sessions
+      miningStartTime: null,          // Start time of CURRENT session
+      miningElapsedSeconds: 0,        // Elapsed time in CURRENT session  
+      walletBalance: 0,
+      miningRewards: 0,               // TOTAL mining rewards from ALL sessions
+      referralBonuses: 0,
+      referralsCount: 0,
+      miningRateVlcPerHour: BASE_MINING_RATE_VLC_PER_HOUR,
+      transactions: [],
+      referralCode: null,
+      usedReferralCode: null,
+      lastMigrationTimestamp: null,
+      lastSaveTime: 0,
+      walletAddress: null
+    };
+    
+    let isMining = false;
+    let miningInterval = null;
+    let userUnsubscribe = null;
+    let miningSessionVlc = 0; // VLC earned in CURRENT session
+
+    // DOM Elements
+    const vlcBalanceElement = document.getElementById('vlc-balance');
+    const miningBtn = document.getElementById('mining-btn');
+    const miningRateDisplay = document.getElementById('mining-rate-display');
+    const miningCounter = document.getElementById('mining-counter');
+    const walletBalanceElement = document.getElementById('wallet-balance');
+    const vlcTokenBalanceElement = document.getElementById('vlc-token-balance');
+    const walletAddressElement = document.getElementById('wallet-address');
+    const totalEarnedElement = document.getElementById('total-earned');
+    const miningRewardsElement = document.getElementById('mining-rewards');
+    const referralBonusesElement = document.getElementById('referral-bonuses');
+    const referralsCountElement = document.getElementById('referrals-count');
+    const availableBalanceElement = document.getElementById('available-balance');
+    const usernameElement = document.getElementById('username');
+    const memberSinceElement = document.getElementById('member-since');
+    const currentUserElement = document.getElementById('current-user');
+    const referralCodeDisplay = document.getElementById('referral-code-display');
+    const referralCodeInput = document.getElementById('referral-code-input');
+    const totalReferralsElement = document.getElementById('total-referrals');
+    const earnedFromReferralsElement = document.getElementById('earned-from-referrals');
+    const inviteTabBtn = document.getElementById('invite-tab-btn');
+    const joinTabBtn = document.getElementById('join-tab-btn');
+    const migrationAmountInput = document.getElementById('migration-amount');
+    const migrationMinedBalanceElement = document.getElementById('migration-mined-balance');
+    const migrationAvailableBalanceElement = document.getElementById('migration-available-balance');
+    const sendAddressInput = document.getElementById('send-address');
+    const sendAmountInput = document.getElementById('send-amount');
+    const receiveAddressDisplay = document.getElementById('receive-address-display');
+    const notification = document.getElementById('notification');
+    const notificationMessage = document.getElementById('notification-message');
+    const sideMenu = document.getElementById('side-menu');
+    const sideMenuOverlay = document.getElementById('side-menu-overlay');
+    const transactionList = document.getElementById('transaction-list');
+
+    // Generate BSC-style wallet address
+    function generateWalletAddress() {
+      const chars = '0123456789abcdef';
+      let result = '0x';
+      for (let i = 0; i < 40; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    }
+
+    // Show notification
+    function showNotification(message, type = 'info', duration = 3000) {
+      notificationMessage.textContent = message;
+      notification.className = `notification ${type} show`;
+      
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, duration);
+    }
+
+    // Side Menu Functions
+    function toggleSideMenu() {
+      sideMenu.classList.toggle('active');
+      sideMenuOverlay.classList.toggle('active');
+    }
+
+    function closeSideMenu() {
+      sideMenu.classList.remove('active');
+      sideMenuOverlay.classList.remove('active');
+    }
+
+    function openWhitepaper() {
+      closeSideMenu();
+      showNotification('Whitepaper will open in a new tab', 'info');
+    }
+
+    function openCoreTeam() {
+      closeSideMenu();
+      showNotification('Core Team information will be displayed', 'info');
+    }
+
+    // Initialize the app
+    async function initApp() {
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          userData.uid = user.uid;
+          userData.email = user.email;
+          currentUserElement.textContent = user.email.split('@')[0];
+          
+          await loadUserData();
+          
+          userUnsubscribe = onSnapshot(doc(db, "users", userData.uid), (doc) => {
+            if (doc.exists()) {
+              const data = doc.data();
+              updateUserData(data);
+              updateUI();
+            }
+          });
+        } else {
+          window.location.href = 'index.html';
+        }
+      });
+    }
+
+    // Load user data from Firestore
+    async function loadUserData() {
+      try {
+        const docRef = doc(db, "users", userData.uid);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          updateUserData(data);
+          updateUI();
+          
+          // Check if mining was active and resume if needed
+          if (userData.miningStartTime) {
+            const now = new Date().getTime();
+            const elapsedMilliseconds = now - userData.miningStartTime;
+            const elapsedSeconds = Math.floor(elapsedMilliseconds / 1000);
+            
+            if (elapsedSeconds < MAX_MINING_SECONDS) {
+              // Resume mining with the stored start time
+              userData.miningElapsedSeconds = elapsedSeconds;
+              const miningRateVlcPerSecond = userData.miningRateVlcPerHour / 3600;
+              miningSessionVlc = elapsedSeconds * miningRateVlcPerSecond;
+              startMining(false);
+            } else {
+              // Mining session completed (24 hours passed)
+              await completeMiningSession();
+            }
+          }
+        } else {
+          await createUserProfile();
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        showNotification('Failed to load mining data. Please try again later.', 'error');
+      }
+    }
+
+    // Update user data from Firestore
+    function updateUserData(data) {
+      userData.createdAt = data.createdAt || new Date().toISOString();
+      userData.username = data.username || userData.username;
+      userData.minedVlc = data.miningData?.minedVlc || userData.minedVlc || 0;
+      userData.miningStartTime = data.miningData?.miningStartTime || null;
+      userData.miningElapsedSeconds = data.miningData?.miningElapsedSeconds || 0;
+      userData.walletBalance = data.miningData?.walletBalance || userData.walletBalance || 0;
+      userData.miningRewards = data.miningData?.miningRewards || userData.miningRewards || 0;
+      userData.referralBonuses = data.miningData?.referralBonuses || userData.referralBonuses || 0;
+      userData.referralsCount = data.miningData?.referralsCount || userData.referralsCount || 0;
+      userData.miningRateVlcPerHour = data.miningData?.miningRateVlcPerHour || userData.miningRateVlcPerHour || BASE_MINING_RATE_VLC_PER_HOUR;
+      userData.transactions = data.miningData?.transactions || userData.transactions || [];
+      userData.lastMigrationTimestamp = data.miningData?.lastMigrationTimestamp || userData.lastMigrationTimestamp || null;
+      userData.referralCode = data.miningData?.referralCode || userData.referralCode;
+      userData.usedReferralCode = data.miningData?.usedReferralCode || userData.usedReferralCode;
+      
+      const existingAddress = data.miningData?.walletAddress;
+      if (existingAddress) {
+        if (existingAddress.startsWith('0x') && existingAddress.length === 42) {
+          userData.walletAddress = existingAddress;
+        } else if (!existingAddress.startsWith('0x')) {
+          userData.walletAddress = generateWalletAddress();
+          saveUserData(true);
+          showNotification('Your wallet has been upgraded to BSC format!', 'success');
+        } else {
+          userData.walletAddress = generateWalletAddress();
+        }
+      } else {
+        userData.walletAddress = generateWalletAddress();
+      }
+      
+      if ((userData.miningRewards > 0 && userData.minedVlc < userData.miningRewards) || 
+          (userData.miningRewards > 0 && userData.minedVlc === 0)) {
+        console.log('Recovering lost mining balance for user:', userData.miningRewards);
+        userData.minedVlc = userData.miningRewards;
+        saveUserData(true);
+      }
+    }
+
+    // Create user profile in Firestore
+    async function createUserProfile() {
+      try {
+        const referralCode = generateReferralCode();
+        const walletAddress = generateWalletAddress();
+        const createdAt = new Date().toISOString();
+        const userProfile = {
+          createdAt: createdAt,
+          email: userData.email,
+          username: userData.email.split('@')[0],
+          miningData: {
+            minedVlc: 0,
+            miningStartTime: null,
+            miningElapsedSeconds: 0,
+            walletBalance: 0,
+            miningRewards: 0,
+            referralBonuses: 0,
+            referralsCount: 0,
+            miningRateVlcPerHour: BASE_MINING_RATE_VLC_PER_HOUR,
+            referralCode: referralCode,
+            usedReferralCode: null,
+            walletAddress: walletAddress,
+            transactions: [],
+            lastMigrationTimestamp: null
+          }
+        };
+        
+        await setDoc(doc(db, "users", userData.uid), userProfile);
+        updateUserData(userProfile);
+        updateUI();
+      } catch (error) {
+        console.error('Error creating user profile:', error);
+        showNotification('Failed to create user profile. Please try again later.', 'error');
+      }
+    }
+
+    // Save user data to Firestore
+    async function saveUserData(forceSave = false) {
+      const now = Date.now();
+      if (!forceSave && now - userData.lastSaveTime < 30000) {
+        return;
+      }
+      
+      try {
+        const docRef = doc(db, "users", userData.uid);
+        
+        await updateDoc(docRef, {
+          createdAt: userData.createdAt,
+          username: userData.username,
+          "miningData.minedVlc": userData.minedVlc || 0,
+          "miningData.miningStartTime": userData.miningStartTime || null,
+          "miningData.miningElapsedSeconds": userData.miningElapsedSeconds || 0,
+          "miningData.walletBalance": userData.walletBalance || 0,
+          "miningData.miningRewards": userData.miningRewards || 0,
+          "miningData.referralBonuses": userData.referralBonuses || 0,
+          "miningData.referralsCount": userData.referralsCount || 0,
+          "miningData.miningRateVlcPerHour": userData.miningRateVlcPerHour || BASE_MINING_RATE_VLC_PER_HOUR,
+          "miningData.referralCode": userData.referralCode || generateReferralCode(),
+          "miningData.usedReferralCode": userData.usedReferralCode || null,
+          "miningData.walletAddress": userData.walletAddress || generateWalletAddress(),
+          "miningData.transactions": userData.transactions || [],
+          "miningData.lastMigrationTimestamp": userData.lastMigrationTimestamp || null,
+          lastUpdated: new Date().toISOString()
+        });
+        
+        userData.lastSaveTime = now;
+        updateUI();
+      } catch (error) {
+        console.error('Error saving user data:', error);
+        showNotification('Failed to save mining data. Please try again later.', 'error');
+      }
+    }
+
+    // Complete mining session and ACCUMULATE rewards
+    async function completeMiningSession() {
+      if (miningSessionVlc > 0) {
+        // ADD session VLC to the permanent TOTAL mined balance
+        userData.minedVlc += miningSessionVlc;
+        userData.miningRewards += miningSessionVlc;
+        addTransaction('Mining Reward', miningSessionVlc);
+        
+        await saveUserData(true);
+        
+        showNotification('24-hour mining session completed! ' + miningSessionVlc.toFixed(3) + ' VLC added to your total balance.', 'success');
+      }
+      
+      // Reset CURRENT session only
+      miningSessionVlc = 0;
+      userData.miningStartTime = null;
+      userData.miningElapsedSeconds = 0;
+      await saveUserData(true);
+    }
+
+    // Update UI with current user data
+    function updateUI() {
+      // Show TOTAL accumulated VLC (all sessions + current session)
+      const totalVlc = (userData.minedVlc || 0) + miningSessionVlc;
+      vlcBalanceElement.textContent = totalVlc.toFixed(3);
+      
+      miningRateDisplay.textContent = (userData.miningRateVlcPerHour || BASE_MINING_RATE_VLC_PER_HOUR).toFixed(2) + ' VLC/h';
+      walletBalanceElement.textContent = '$ ' + (userData.walletBalance || 0).toFixed(2);
+      vlcTokenBalanceElement.textContent = (userData.walletBalance || 0).toFixed(2);
+      
+      const address = userData.walletAddress || 'Loading...';
+      if (address.length > 14) {
+        walletAddressElement.textContent = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+      } else {
+        walletAddressElement.textContent = address;
+      }
+      
+      // Show TOTAL accumulated earnings
+      totalEarnedElement.textContent = ((userData.miningRewards || 0) + (userData.referralBonuses || 0) + miningSessionVlc).toFixed(2) + ' VLC';
+      miningRewardsElement.textContent = ((userData.miningRewards || 0) + miningSessionVlc).toFixed(2) + ' VLC';
+      referralBonusesElement.textContent = (userData.referralBonuses || 0).toFixed(2) + ' VLC';
+      referralsCountElement.textContent = userData.referralsCount || 0;
+      availableBalanceElement.textContent = (userData.walletBalance || 0).toFixed(2) + ' VLC';
+      
+      usernameElement.textContent = userData.username || 'Vulcano Miner';
+      memberSinceElement.textContent = `Member since ${new Date(userData.createdAt).toLocaleString('default', { month: 'long', year: 'numeric' })}`;
+      
+      referralCodeDisplay.textContent = userData.referralCode || 'Generating...';
+      totalReferralsElement.textContent = userData.referralsCount || 0;
+      earnedFromReferralsElement.textContent = (userData.referralBonuses || 0).toFixed(2) + ' VLC';
+    }
+
+    // Update history tab
+    function updateHistory() {
+      let html = '';
+      userData.transactions.sort((a, b) => b.timestamp - a.timestamp).forEach(tx => {
+        const date = new Date(tx.timestamp).toLocaleString();
+        let addressInfo = '';
+        if (tx.address) {
+          addressInfo = ` (${tx.type === 'Send' ? 'to' : 'from'} ${tx.address.substring(0, 6)}...${tx.address.substring(tx.address.length - 4)})`;
+        }
+        html += `
+          <div class="token-item">
+            <div class="token-left">
+              <div class="token-name">${tx.type}${addressInfo}</div>
+            </div>
+            <div class="token-right">
+              <div class="value">${tx.amount.toFixed(3)} VLC</div>
+              <div class="muted-small">${date}</div>
+            </div>
+          </div>
+        `;
+      });
+      transactionList.innerHTML = html;
+    }
+
+    // Toggle mining state
+    function toggleMining() {
+      if (isMining) {
+        showNotification('Mining session in progress. It will complete automatically after 24 hours.', 'info');
+        return;
+      } else {
+        // Check if previous session needs completing
+        if (userData.miningStartTime) {
+          const now = new Date().getTime();
+          const elapsedMilliseconds = now - userData.miningStartTime;
+          const elapsedSeconds = Math.floor(elapsedMilliseconds / 1000);
+          
+          if (elapsedSeconds >= MAX_MINING_SECONDS) {
+            completeMiningSession();
+          }
+        }
+        
+        startMining();
+      }
+    }
+
+    // Start mining
+    async function startMining(shouldSave = true) {
+      isMining = true;
+      miningBtn.classList.add('active');
+      
+      if (!userData.miningStartTime) {
+        userData.miningStartTime = new Date().getTime();
+        
+        if (shouldSave) {
+          try {
+            await updateDoc(doc(db, "users", userData.uid), {
+              "miningData.miningStartTime": userData.miningStartTime,
+              lastUpdated: new Date().toISOString()
+            });
+          } catch (error) {
+            console.error('Error saving mining start time:', error);
+          }
+        }
+      }
+      
+      miningInterval = setInterval(updateMining, 1000);
+      showNotification('Mining started successfully!', 'success');
+    }
+
+    // Update mining progress
+    function updateMining() {
+      if (!validateMiningState()) return;
+      
+      const now = new Date().getTime();
+      const elapsedMilliseconds = now - userData.miningStartTime;
+      userData.miningElapsedSeconds = Math.floor(elapsedMilliseconds / 1000);
+      
+      const miningRateVlcPerSecond = userData.miningRateVlcPerHour / 3600;
+      miningSessionVlc = userData.miningElapsedSeconds * miningRateVlcPerSecond;
+      
+      // Stop after 24 hours
+      if (userData.miningElapsedSeconds >= MAX_MINING_SECONDS) {
+        completeMiningSession();
+        stopMining();
+        return;
+      }
+      
+      const remainingSeconds = MAX_MINING_SECONDS - userData.miningElapsedSeconds;
+      const hours = Math.floor(remainingSeconds / 3600);
+      const minutes = Math.floor((remainingSeconds % 3600) / 60);
+      const seconds = remainingSeconds % 60;
+      
+      miningCounter.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      
+      updateUI();
+    }
+
+    // Stop mining (called automatically after 24h)
+    async function stopMining() {
+      isMining = false;
+      clearInterval(miningInterval);
+      miningBtn.classList.remove('active');
+      miningCounter.textContent = '00:00:00';
+    }
+
+    // Migration functions
+    function showMigrationSection() {
+      const totalVlc = userData.minedVlc + miningSessionVlc;
+      migrationMinedBalanceElement.textContent = totalVlc.toFixed(3) + ' VLC';
+      
+      const alreadyMigratedToday = getTodayMigratedAmount();
+      const availableToMigrate = Math.max(0, totalVlc - alreadyMigratedToday);
+      
+      migrationAvailableBalanceElement.textContent = availableToMigrate.toFixed(3) + ' VLC';
+      migrationAmountInput.value = '';
+      migrationAmountInput.max = availableToMigrate.toFixed(3);
+      navigate('migration');
+    }
+
+    function getTodayMigratedAmount() {
+      const today = new Date().toDateString();
+      return userData.transactions.reduce((total, tx) => {
+        if (tx.type === 'Migration') {
+          const txDate = new Date(tx.timestamp).toDateString();
+          if (txDate === today) {
+            return total + tx.amount;
+          }
+        }
+        return total;
+      }, 0);
+    }
+
+    function processMigration() {
+      const amount = parseFloat(migrationAmountInput.value);
+      const availableToMigrate = parseFloat(migrationAmountInput.max);
+      
+      if (isNaN(amount)) {
+        showNotification('Please enter a valid number', 'error');
+        return;
+      }
+      
+      if (amount <= 0) {
+        showNotification('Amount must be greater than 0', 'error');
+        return;
+      }
+      
+      if (amount > availableToMigrate) {
+        showNotification(`You can only migrate up to ${availableToMigrate.toFixed(3)} VLC right now`, 'error');
+        return;
+      }
+      
+      const totalVlc = userData.minedVlc + miningSessionVlc;
+      const alreadyMigratedToday = getTodayMigratedAmount();
+      const actualAvailable = totalVlc - alreadyMigratedToday;
+      
+      if (amount > actualAvailable) {
+        showNotification('Available balance has changed. Please try again.', 'error');
+        navigate('wallet');
+        return;
+      }
+      
+      if (miningSessionVlc >= amount) {
+        miningSessionVlc -= amount;
+      } else {
+        const remaining = amount - miningSessionVlc;
+        miningSessionVlc = 0;
+        userData.minedVlc -= remaining;
+      }
+      
+      userData.walletBalance += amount;
+      userData.lastMigrationTimestamp = Date.now();
+      addTransaction('Migration', amount);
+      saveUserData(true);
+      navigate('wallet');
+      showNotification(`${amount.toFixed(3)} VLC migrated to wallet successfully`, 'success');
+    }
+
+    // Send functions
+    function showSendSection() {
+      sendAddressInput.value = '';
+      sendAmountInput.value = '';
+      navigate('send');
+    }
+
+    async function processSend() {
+      const address = sendAddressInput.value.trim();
+      const amount = parseFloat(sendAmountInput.value);
+      
+      if (!address) {
+        showNotification('Please enter a recipient address', 'error');
+        return;
+      }
+      
+      if (isNaN(amount) || amount <= 0) {
+        showNotification('Please enter a valid amount', 'error');
+        return;
+      }
+      
+      if (amount > userData.walletBalance) {
+        showNotification(`You only have ${userData.walletBalance.toFixed(3)} VLC in your wallet`, 'error');
+        return;
+      }
+      
+      if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
+        showNotification('Please enter a valid BSC address (0x followed by 40 hex characters)', 'error');
+        return;
+      }
+      
+      if (address === userData.walletAddress) {
+        showNotification('You cannot send VLC to your own address', 'error');
+        return;
+      }
+      
+      try {
+        const querySnapshot = await getDocs(query(collection(db, "users"), where("miningData.walletAddress", "==", address), limit(1)));
+        
+        if (querySnapshot.empty) {
+          showNotification('Recipient address not found in our system', 'error');
+          return;
+        }
+        
+        const recipientDoc = querySnapshot.docs[0];
+        const recipientData = recipientDoc.data();
+        const recipientUid = recipientDoc.id;
+        
+        const currentRecipientBalance = recipientData.miningData?.walletBalance || 0;
+        const recipientTransactions = recipientData.miningData?.transactions || [];
+        
+        userData.walletBalance -= amount;
+        addTransaction('Send', -amount, address);
+        
+        const newRecipientBalance = currentRecipientBalance + amount;
+        const recipientTransaction = {
+          type: 'Receive',
+          amount: amount,
+          timestamp: new Date().getTime(),
+          from: userData.walletAddress
+        };
+        
+        await Promise.all([
+          updateDoc(doc(db, "users", userData.uid), {
+            "miningData.walletBalance": userData.walletBalance,
+            "miningData.transactions": userData.transactions,
+            lastUpdated: new Date().toISOString()
+          }),
+          
+          updateDoc(doc(db, "users", recipientUid), {
+            "miningData.walletBalance": newRecipientBalance,
+            "miningData.transactions": [...recipientTransactions, recipientTransaction],
+            lastUpdated: new Date().toISOString()
+          })
+        ]);
+        
+        await saveUserData(true);
+        
+        navigate('wallet');
+        showNotification(`${amount.toFixed(3)} VLC sent to ${address} successfully`, 'success');
+        
+      } catch (error) {
+        console.error('Error processing send:', error);
+        showNotification('Failed to process transaction. Please try again later.', 'error');
+      }
+    }
+
+    // Receive functions
+    function showReceiveSection() {
+      const address = userData.walletAddress || 'Loading...';
+      receiveAddressDisplay.textContent = address;
+      navigate('receive');
+    }
+
+    // Enhanced cheating prevention
+    function validateMiningState() {
+      if (!isMining || !userData.miningStartTime) return true;
+      
+      const now = new Date().getTime();
+      const elapsedMilliseconds = now - userData.miningStartTime;
+      const elapsedSeconds = Math.floor(elapsedMilliseconds / 1000);
+      
+      if (elapsedSeconds > MAX_MINING_SECONDS * 1.1) {
+        showNotification('Mining session has been reset due to irregular time detection', 'warning');
+        stopMining();
+        userData.miningStartTime = null;
+        userData.miningElapsedSeconds = 0;
+        miningSessionVlc = 0;
+        saveUserData(true);
+        return false;
+      }
+      
+      if (userData.miningElapsedSeconds > 0 && elapsedSeconds < userData.miningElapsedSeconds) {
+        showNotification('Mining session has been reset due to time manipulation', 'warning');
+        stopMining();
+        userData.miningStartTime = null;
+        userData.miningElapsedSeconds = 0;
+        miningSessionVlc = 0;
+        saveUserData(true);
+        return false;
+      }
+      
+      return true;
+    }
+
+    // Add transaction
+    function addTransaction(type, amount, address = null) {
+      const transaction = {
+        type,
+        amount,
+        timestamp: new Date().getTime()
+      };
+      
+      if (address) {
+        transaction.address = address;
+      }
+      
+      userData.transactions.push(transaction);
+      
+      if (userData.transactions.length > 100) {
+        userData.transactions = userData.transactions.slice(-100);
+      }
+    }
+
+    // Navigation
+    function navigate(page) {
+      closeSideMenu();
+      document.querySelectorAll('.footer-item').forEach(item => item.classList.remove('active'));
+      
+      if (page === 'home') {
+        document.querySelector('.footer-item:nth-child(1)').classList.add('active');
+      } else if (page === 'wallet') {
+        document.querySelector('.footer-item:nth-child(2)').classList.add('active');
+      } else if (page === 'profile') {
+        document.querySelector('.footer-item:nth-child(3)').classList.add('active');
+      }
+
+      document.getElementById('main-content').style.display = 'none';
+      document.getElementById('vulcano-content').style.display = 'none';
+      document.getElementById('wallet-content').style.display = 'none';
+      document.getElementById('profile-content').style.display = 'none';
+      document.getElementById('referral-content').style.display = 'none';
+      document.getElementById('migration-content').style.display = 'none';
+      document.getElementById('send-content').style.display = 'none';
+      document.getElementById('receive-content').style.display = 'none';
+      
+      if (page === 'wallet') {
+        document.getElementById('sidebar').style.display = 'none';
+      } else {
+        document.getElementById('sidebar').style.display = 'flex';
+      }
+
+      if (page === 'home') {
+        document.getElementById('main-content').style.display = 'flex';
+        document.getElementById('vulcano-content').style.display = 'block';
+      } else if (page === 'wallet') {
+        document.getElementById('wallet-content').style.display = 'block';
+      } else if (page === 'profile') {
+        document.getElementById('profile-content').style.display = 'block';
+      } else if (page === 'referral') {
+        document.getElementById('referral-content').style.display = 'block';
+      } else if (page === 'migration') {
+        document.getElementById('migration-content').style.display = 'block';
+      } else if (page === 'send') {
+        document.getElementById('send-content').style.display = 'block';
+      } else if (page === 'receive') {
+        document.getElementById('receive-content').style.display = 'block';
+      }
+    }
+
+    // Referral Functions
+    function switchReferralTab(tabName) {
+      document.querySelectorAll('.referral-tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      document.querySelectorAll('.referral-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      document.getElementById(`${tabName}-tab`).classList.add('active');
+      
+      if (tabName === 'invite') {
+        inviteTabBtn.classList.add('active');
+      } else if (tabName === 'join') {
+        joinTabBtn.classList.add('active');
+      }
+    }
+
+    function copyReferralCode() {
+      if (userData.referralCode) {
+        navigator.clipboard.writeText(userData.referralCode).then(() => {
+          showNotification('Your referral code has been copied to clipboard!', 'success');
+        }).catch(() => {
+          showNotification('Failed to copy referral code. Please try again.', 'error');
+        });
+      } else {
+        showNotification('Referral code not available. Please try again later.', 'error');
+      }
+    }
+
+    async function joinWithReferral() {
+      const referralCode = referralCodeInput.value.trim();
+      
+      if (!referralCode) {
+        showNotification('Please enter a referral code', 'error');
+        return;
+      }
+      
+      if (referralCode === userData.referralCode) {
+        showNotification('You cannot use your own referral code', 'error');
+        return;
+      }
+      
+      if (userData.usedReferralCode) {
+        showNotification('You have already used a referral code', 'error');
+        return;
+      }
+      
+      try {
+        const querySnapshot = await getDocs(query(collection(db, "users"), where("miningData.referralCode", "==", referralCode), limit(1)));
+        
+        if (querySnapshot.empty) {
+          throw new Error('Invalid referral code');
+        }
+        
+        const referrerDoc = querySnapshot.docs[0];
+        const referrerData = referrerDoc.data();
+        const referrerUid = referrerDoc.id;
+        
+        userData.usedReferralCode = referralCode;
+        userData.referralBonuses = (userData.referralBonuses || 0) + REFERRAL_REWARD;
+        userData.minedVlc = (userData.minedVlc || 0) + REFERRAL_REWARD;
+        userData.transactions.push({
+          type: 'Referral Bonus',
+          amount: REFERRAL_REWARD,
+          timestamp: new Date().getTime()
+        });
+        
+        const newReferralsCount = (referrerData.miningData?.referralsCount || 0) + 1;
+        const newReferralBonuses = (referrerData.miningData?.referralBonuses || 0) + REFERRAL_REWARD;
+        const newMinedVlc = (referrerData.miningData?.minedVlc || 0) + REFERRAL_REWARD;
+        const newMiningRate = (referrerData.miningData?.miningRateVlcPerHour || BASE_MINING_RATE_VLC_PER_HOUR) + MINING_RATE_INCREMENT;
+        
+        await Promise.all([
+          saveUserData(true),
+          updateDoc(doc(db, "users", referrerUid), {
+            "miningData.referralsCount": newReferralsCount,
+            "miningData.referralBonuses": newReferralBonuses,
+            "miningData.minedVlc": newMinedVlc,
+            "miningData.miningRateVlcPerHour": newMiningRate,
+            "miningData.transactions": [
+              ...(referrerData.miningData?.transactions || []),
+              {
+                type: 'Referral Bonus',
+                amount: REFERRAL_REWARD,
+                timestamp: new Date().getTime()
+              }
+            ],
+            lastUpdated: new Date().toISOString()
+          })
+        ]);
+        
+        showNotification(`You've successfully joined with referral code ${referralCode} and earned ${REFERRAL_REWARD} VLC!`, 'success');
+        navigate('profile');
+        
+      } catch (error) {
+        console.error('Error processing referral:', error);
+        showNotification(error.message || 'Failed to process referral. Please try again later.', 'error');
+      }
+    }
+
+    // Generate referral code
+    function generateReferralCode() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let result = '';
+      for (let i = 0; i < 8; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    }
+
+    // Logout function
+    function logout() {
+      if (userUnsubscribe) {
+        userUnsubscribe();
+      }
+      if (isMining) {
+        saveUserData(true);
+      }
+      signOut(auth).then(() => {
+        window.location.href = 'index.html';
+      }).catch((error) => {
+        console.error('Error signing out:', error);
+      });
+    }
+
+    // Save data when tab is hidden or closed
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden' && isMining) {
+        saveUserData();
+      }
+    });
+
+    window.addEventListener('beforeunload', () => {
+      if (isMining) {
+        saveUserData(true);
+      }
+      if (userUnsubscribe) {
+        userUnsubscribe();
+      }
+    });
+
+    // Initialize the app when the page loads
+    window.addEventListener('load', initApp);
+
+    // Wallet button event listeners
+    document.getElementById('copyBtn').addEventListener('click', async () => {
+      const address = userData.walletAddress;
+      try {
+        await navigator.clipboard.writeText(address);
+        const copyBtn = document.getElementById('copyBtn');
+        copyBtn.title = 'Copied!';
+        copyBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#2ea44f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        showNotification('Address copied to clipboard!', 'success');
+        setTimeout(() => {
+          copyBtn.title = 'Copy address';
+          copyBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 9H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-4" stroke="#6b6b6b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="9" y="3" width="11" height="11" rx="2" stroke="#6b6b6b" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        }, 1100);
+      } catch (err) {
+        showNotification('Copy failed (clipboard access blocked).', 'error');
+      }
+    });
+
+    document.getElementById('receiveBtn').addEventListener('click', () => {
+      showReceiveSection();
+    });
+
+    document.getElementById('sendBtn').addEventListener('click', () => {
+      showSendSection();
+    });
+
+    document.getElementById('migrateBtn').addEventListener('click', () => {
+      showMigrationSection();
+    });
+
+    // Tabs
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(t => {
+      t.addEventListener('click', () => {
+        tabs.forEach(x => x.classList.remove('active'));
+        t.classList.add('active');
+        document.getElementById('tokensPanel').style.display = t.id === 'tab-tokens' ? 'block' : 'none';
+        document.getElementById('historyPanel').style.display = t.id === 'tab-history' ? 'block' : 'none';
+        if (t.id === 'tab-history') updateHistory();
+      });
+    });
+
+    // Token click
+    function tokenClick() {
+      showNotification(`Your VLC balance: ${userData.walletBalance.toFixed(3)} VLC`, 'info');
+    }
+  </script>
+</body>
+</html>

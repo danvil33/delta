@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Volcano - Cryptocurrency Mining</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification, signInWithPopup, GoogleAuthProvider, GithubAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBEjeRSyKbpEmbNk0SYLUFPp3lbgP9x3Ow",
+            authDomain: "volcanobxpl.firebaseapp.com",
+            projectId: "volcanobxpl",
+            storageBucket: "volcanobxpl.firebasestorage.app",
+            messagingSenderId: "742861205377",
+            appId: "1:742861205377:web:bbe8a42b78c90354a64280",
+            measurementId: "G-G1KWGHLZES"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        // Make auth available globally
+        window.auth = auth;
+        window.db = db;
+        window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+        window.sendPasswordResetEmail = sendPasswordResetEmail;
+        window.sendEmailVerification = sendEmailVerification;
+        window.signInWithPopup = signInWithPopup;
+        window.GoogleAuthProvider = GoogleAuthProvider;
+        window.GithubAuthProvider = GithubAuthProvider;
+        window.onAuthStateChanged = onAuthStateChanged;
+        window.signOut = signOut;
+        window.getDoc = getDoc;
+        window.setDoc = setDoc;
+        window.doc = doc;
+        window.updateDoc = updateDoc;
+    </script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        :root {
+            --primary: #FF5A1F;
+            --primary-light: #FF8C5A;
+            --primary-dark: #E53E3E;
+            --secondary: #F6AD55;
+            --dark: #1a1a2e;
+            --dark-light: #21213e;
+            --text: #ffffff;
+            --text-light: #b8b8b8;
+            --success: #48BB78;
+            --error: #F56565;
+            --lava: #FF5A1F;
+        }
+
+        body {
+            background: var(--dark);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 440px;
+            width: 100%;
+            background: var(--dark-light);
+            border-radius: 12px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .logo-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .logo h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .logo p {
+            color: var(--text-light);
+            font-size: 16px;
+            font-weight: 300;
+        }
+
+        .tabs {
+            display: none;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 6px;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 12px;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 15px;
+            color: var(--text-light);
+        }
+
+        .tab.active {
+            background: rgba(255, 90, 31, 0.2);
+            color: var(--primary);
+        }
+
+        .form-container {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .form-container.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #landing-form {
+            text-align: center;
+        }
+
+        #landing-form p.verify {
+            color: var(--text-light);
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        #landing-form button {
+            width: 100%;
+            padding: 16px;
+            margin-bottom: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #landing-form button:hover {
+            background: rgba(255, 90, 31, 0.2);
+            border-color: var(--primary);
+        }
+
+        #landing-form .version {
+            color: var(--text-light);
+            font-size: 14px;
+            margin-top: 40px;
+            margin-bottom: 10px;
+        }
+
+        #landing-form .links {
+            font-size: 14px;
+        }
+
+        #landing-form .links a {
+            color: var(--primary);
+            text-decoration: none;
+            margin: 0 5px;
+        }
+
+        #landing-form .links a:hover {
+            text-decoration: underline;
+        }
+
+        .input-group {
+            margin-bottom: 22px;
+            position: relative;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 16px 18px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(255, 90, 31, 0.2);
+        }
+
+        .input-group input::placeholder {
+            color: var(--text-light);
+        }
+
+        .input-group .icon {
+            position: absolute;
+            right: 18px;
+            top: 44px;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .input-group .icon:hover {
+            color: var(--primary);
+        }
+
+        .password-strength {
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0%;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 25px;
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .checkbox-container input {
+            margin-right: 12px;
+            margin-top: 4px;
+            accent-color: var(--primary);
+        }
+
+        .checkbox-container a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .checkbox-container a:hover {
+            color: var(--primary-light);
+        }
+
+        .continue-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--lava);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .continue-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 90, 31, 0.3);
+        }
+
+        .continue-btn:active {
+            background: var(--primary-dark);
+            transform: translateY(0);
+        }
+
+        .continue-btn i {
+            margin-left: 8px;
+            transition: transform 0.3s ease;
+        }
+
+        .continue-btn:hover i {
+            transform: translateX(3px);
+        }
+
+        .continue-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 25px 0;
+            color: var(--text-light);
+            font-size: 14px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .divider span {
+            padding: 0 15px;
+        }
+
+        .alternative-auth {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .auth-text {
+            font-size: 14px;
+            color: var(--text-light);
+            margin-bottom: 15px;
+        }
+
+        .auth-options {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .auth-option {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .auth-option:hover {
+            background: rgba(255, 90, 31, 0.2);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .auth-option i {
+            font-size: 20px;
+            color: var(--text-light);
+        }
+
+        .links {
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-light);
+        }
+
+        .links a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            margin: 0 5px;
+            transition: color 0.3s ease;
+        }
+
+        .links a:hover {
+            color: var(--primary-light);
+        }
+
+        .security-notice {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-top: 25px;
+            font-size: 13px;
+            border-left: 3px solid var(--primary);
+        }
+
+        .security-notice i {
+            color: var(--secondary);
+            margin-right: 12px;
+            font-size: 16px;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: var(--dark-light);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            z-index: 1000;
+            transform: translateX(150%);
+            transition: transform 0.4s ease;
+            border-left: 4px solid var(--success);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            border-left-color: var(--error);
+        }
+
+        .notification i {
+            margin-right: 10px;
+            font-size: 18px;
+        }
+
+        .notification.success i {
+            color: var(--success);
+        }
+
+        .notification.error i {
+            color: var(--error);
+        }
+
+        .volcano-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            z-index: -1;
+        }
+
+        .volcano-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('https://raw.githubusercontent.com/danvil33/Danvil-AI-/refs/heads/main/file_000000001b2462439e24ab615e8de52c.png') no-repeat center center;
+            background-size: cover;
+            opacity: 0.05;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            .logo h2 {
+                font-size: 20px;
+            }
+            
+            .auth-options {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="volcano-bg"></div>
+
+    <div class="container">
+        <div class="logo">
+            <div class="logo-circle">
+                <img src="https://raw.githubusercontent.com/danvil33/Danvil-AI-/refs/heads/main/file_000000001b2462439e24ab615e8de52c.png" alt="Volcano Logo">
+            </div>
+            <h2>Volcano - Cryptocurrency Mining</h2>
+            <p>Powerful mining made accessible</p>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="login">Log In</div>
+            <div class="tab" data-tab="signup">Sign Up</div>
+        </div>
+        
+        <!-- Landing Form -->
+        <div class="form-container active" id="landing-form">
+            <p class="verify">Please verify your identity to get started.</p>
+            <button id="go-to-login">Login</button>
+            <button id="go-to-signup">Create account</button>
+            <p class="version">v1.38.2</p>
+            <div class="links">
+                <a href="#">Terms of Service</a> - <a href="#">Privacy Policy</a>
+            </div>
+        </div>
+        
+        <!-- Login Form -->
+        <div class="form-container" id="login-form">
+            <div class="input-group">
+                <label for="login-email">Email Address</label>
+                <input type="text" id="login-email" placeholder="Enter your email address">
+                <span class="icon"><i class="fas fa-envelope"></i></span>
+            </div>
+            
+            <div class="input-group">
+                <label for="login-password">Password</label>
+                <input type="password" id="login-password" placeholder="Enter your password">
+                <span class="icon toggle-password"><i class="far fa-eye"></i></span>
+            </div>
+            
+            <div class="checkbox-container">
+                <input type="checkbox" id="remember">
+                <label for="remember">Keep me logged in for 30 days</label>
+            </div>
+            
+            <button class="continue-btn" id="login-btn">Log In <i class="fas fa-arrow-right"></i></button>
+            
+            <div class="divider"><span>or access with</span></div>
+            
+            <div class="alternative-auth">
+                <div class="auth-text">Use one of these methods</div>
+                <div class="auth-options">
+                    <div class="auth-option" title="Google Authentication" id="google-login">
+                        <i class="fab fa-google"></i>
+                    </div>
+                    <div class="auth-option" title="GitHub Authentication" id="github-login">
+                        <i class="fab fa-github"></i>
+                    </div>
+                    <div class="auth-option" title="Phone Authentication" id="phone-login">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="links">
+                <a href="#" id="forgot-password">Forgot password?</a> • <a href="#">Enterprise login</a>
+            </div>
+        </div>
+        
+        <!-- Sign Up Form -->
+        <div class="form-container" id="signup-form">
+            <div class="input-group">
+                <label for="signup-email">Email Address</label>
+                <input type="text" id="signup-email" placeholder="Enter your email address">
+                <span class="icon"><i class="fas fa-envelope"></i></span>
+            </div>
+            
+            <div class="input-group">
+                <label for="signup-password">Password</label>
+                <input type="password" id="signup-password" placeholder="Create a strong password">
+                <span class="icon toggle-password"><i class="far fa-eye"></i></span>
+                <div class="password-strength">
+                    <div class="password-strength-bar"></div>
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label for="confirm-password">Confirm Password</label>
+                <input type="password" id="confirm-password" placeholder="Confirm your password">
+                <span class="icon toggle-password"><i class="far fa-eye"></i></span>
+            </div>
+            
+            <div class="checkbox-container">
+                <input type="checkbox" id="agree">
+                <label for="agree">I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</label>
+            </div>
+            
+            <button class="continue-btn" id="signup-btn">Create Account <i class="fas fa-arrow-right"></i></button>
+            
+            <div class="links">
+                Already have an account? <a href="#" id="switch-to-login">Log in</a>
+            </div>
+        </div>
+        
+        <!-- Forgot Password Form (hidden by default) -->
+        <div class="form-container" id="forgot-password-form">
+            <div class="input-group">
+                <label for="reset-email">Email Address</label>
+                <input type="text" id="reset-email" placeholder="Enter your email address">
+                <span class="icon"><i class="fas fa-envelope"></i></span>
+            </div>
+            
+            <button class="continue-btn" id="reset-btn">Reset Password <i class="fas fa-arrow-right"></i></button>
+            
+            <div class="links">
+                Remember your password? <a href="#" id="back-to-login">Back to login</a>
+            </div>
+        </div>
+        
+        <div class="security-notice">
+            <i class="fas fa-shield-alt"></i>
+            <span>Your security is our priority. We use advanced encryption to protect your data.</span>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle"></i>
+        <span>Login successful! Redirecting...</span>
+    </div>
+
+    <script>
+        // Wait for Firebase to be initialized
+        document.addEventListener('DOMContentLoaded', function() {
+            // Landing page buttons
+            document.getElementById('go-to-login').addEventListener('click', function() {
+                document.querySelectorAll('.form-container').forEach(form => form.classList.remove('active'));
+                document.getElementById('login-form').classList.add('active');
+                document.querySelector('.tabs').style.display = 'flex';
+                document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+                document.querySelector('.tab[data-tab="login"]').classList.add('active');
+            });
+
+            document.getElementById('go-to-signup').addEventListener('click', function() {
+                document.querySelectorAll('.form-container').forEach(form => form.classList.remove('active'));
+                document.getElementById('signup-form').classList.add('active');
+                document.querySelector('.tabs').style.display = 'flex';
+                document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+                document.querySelector('.tab[data-tab="signup"]').classList.add('active');
+            });
+
+            // Tab switching functionality
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class from all tabs
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    // Add active class to clicked tab
+                    tab.classList.add('active');
+                    
+                    // Hide all forms
+                    document.querySelectorAll('.form-container').forEach(form => {
+                        form.classList.remove('active');
+                    });
+                    
+                    // Show the corresponding form
+                    const tabId = tab.getAttribute('data-tab');
+                    document.getElementById(`${tabId}-form`).classList.add('active');
+                });
+            });
+            
+            // Password visibility toggle
+            document.querySelectorAll('.toggle-password').forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    const input = this.parentElement.querySelector('input');
+                    const icon = this.querySelector('i');
+                    
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    } else {
+                        input.type = 'password';
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    }
+                });
+            });
+            
+            // Password strength indicator
+            const passwordInput = document.getElementById('signup-password');
+            const strengthBar = document.querySelector('.password-strength-bar');
+            
+            if (passwordInput) {
+                passwordInput.addEventListener('input', function() {
+                    const password = this.value;
+                    let strength = 0;
+                    
+                    if (password.length >= 8) strength += 25;
+                    if (/[A-Z]/.test(password)) strength += 25;
+                    if (/[0-9]/.test(password)) strength += 25;
+                    if (/[^A-Za-z0-9]/.test(password)) strength += 25;
+                    
+                    strengthBar.style.width = `${strength}%`;
+                    
+                    if (strength < 50) {
+                        strengthBar.style.background = 'var(--error)';
+                    } else if (strength < 75) {
+                        strengthBar.style.background = 'orange';
+                    } else {
+                        strengthBar.style.background = 'var(--success)';
+                    }
+                });
+            }
+            
+            // Login functionality
+            document.getElementById('login-btn').addEventListener('click', function() {
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                
+                if (!email || !password) {
+                    showNotification('Please fill in all required fields.', 'error');
+                    return;
+                }
+                
+                // Add loading animation
+                const originalText = this.innerHTML;
+                this.innerHTML = 'Logging in <i class="fas fa-spinner fa-spin"></i>';
+                this.disabled = true;
+                
+                // Firebase login
+                signInWithEmailAndPassword(auth, email, password)
+                    .then((userCredential) => {
+                        const user = userCredential.user;
+                        if (user.emailVerified) {
+                            showNotification('Login successful! Welcome.', 'success');
+                            // Redirect after successful login
+                            setTimeout(() => {
+                                window.location.href = 'mining.html';
+                            }, 2000);
+                        } else {
+                            showNotification('Please verify your email before logging in.', 'error');
+                            signOut(auth);
+                            sendEmailVerification(user)
+                                .then(() => {
+                                    showNotification('Verification email resent. Please check your inbox.', 'success');
+                                })
+                                .catch((error) => {
+                                    console.error('Error resending verification:', error);
+                                });
+                        }
+                        // Reset button
+                        this.innerHTML = originalText;
+                        this.disabled = false;
+                    })
+                    .catch((error) => {
+                        const errorCode = error.code;
+                        let errorMessage = 'An error occurred during login.';
+                        
+                        if (errorCode === 'auth/user-not-found') {
+                            errorMessage = 'No account found with this email.';
+                        } else if (errorCode === 'auth/wrong-password') {
+                            errorMessage = 'Incorrect password.';
+                        } else if (errorCode === 'auth/invalid-email') {
+                            errorMessage = 'Invalid email address.';
+                        }
+                        
+                        showNotification(errorMessage, 'error');
+                        
+                        // Reset button
+                        this.innerHTML = originalText;
+                        this.disabled = false;
+                    });
+            });
+            
+            // Signup functionality
+            document.getElementById('signup-btn').addEventListener('click', function() {
+                const email = document.getElementById('signup-email').value;
+                const password = document.getElementById('signup-password').value;
+                const confirmPassword = document.getElementById('confirm-password').value;
+                const agreeCheckbox = document.getElementById('agree');
+                
+                if (!email || !password || !confirmPassword) {
+                    showNotification('Please fill in all required fields.', 'error');
+                    return;
+                }
+                
+                if (password !== confirmPassword) {
+                    showNotification('Passwords do not match.', 'error');
+                    return;
+                }
+                
+                if (!agreeCheckbox.checked) {
+                    showNotification('Please agree to the Terms of Service and Privacy Policy.', 'error');
+                    return;
+                }
+                
+                // Add loading animation
+                const originalText = this.innerHTML;
+                this.innerHTML = 'Creating account <i class="fas fa-spinner fa-spin"></i>';
+                this.disabled = true;
+                
+                // Firebase signup
+                createUserWithEmailAndPassword(auth, email, password)
+                    .then((userCredential) => {
+                        // Signed up
+                        const user = userCredential.user;
+                        
+                        // Create user profile in Firestore
+                        const userProfile = {
+                            email: user.email,
+                            username: user.email.split('@')[0], // Default username from email
+                            createdAt: new Date().toISOString(),
+                            miningData: {
+                                minedPxl: 0,
+                                miningStartTime: null,
+                                miningElapsedSeconds: 0,
+                                walletBalance: 0,
+                                miningRewards: 0,
+                                referralBonuses: 0,
+                                referralsCount: 0,
+                                miningRatePxlPerHour: 1,
+                                referralCode: generateReferralCode(),
+                                usedReferralCode: null,
+                                transactions: [],
+                                lastMigrationTimestamp: null,
+                                lastMiningDay: null
+                            }
+                        };
+                        
+                        // Save user profile to Firestore
+                        setDoc(doc(db, "users", user.uid), userProfile)
+                            .then(() => {
+                                // Send email verification
+                                sendEmailVerification(user)
+                                    .then(() => {
+                                        showNotification('Account created successfully! Please check your email for verification.', 'success');
+                                        
+                                        // Clear the form
+                                        document.getElementById('signup-email').value = '';
+                                        document.getElementById('signup-password').value = '';
+                                        document.getElementById('confirm-password').value = '';
+                                        document.getElementById('agree').checked = false;
+                                        
+                                        // Reset button
+                                        this.innerHTML = originalText;
+                                        this.disabled = false;
+                                        
+                                        // Switch to login form after a delay
+                                        setTimeout(() => {
+                                            document.getElementById('switch-to-login').click();
+                                        }, 3000);
+                                    })
+                                    .catch((error) => {
+                                        console.error('Error sending verification email:', error);
+                                        showNotification('Account created but verification email failed to send.', 'error');
+                                        
+                                        // Reset button
+                                        this.innerHTML = originalText;
+                                        this.disabled = false;
+                                    });
+                            })
+                            .catch((error) => {
+                                console.error('Error creating user profile:', error);
+                                showNotification('Account created but profile setup failed.', 'error');
+                                
+                                // Reset button
+                                this.innerHTML = originalText;
+                                this.disabled = false;
+                            });
+                    })
+                    .catch((error) => {
+                        const errorCode = error.code;
+                        let errorMessage = 'An error occurred during signup.';
+                        
+                        if (errorCode === 'auth/email-already-in-use') {
+                            errorMessage = 'An account with this email already exists.';
+                        } else if (errorCode === 'auth/invalid-email') {
+                            errorMessage = 'Invalid email address.';
+                        } else if (errorCode === 'auth/weak-password') {
+                            errorMessage = 'Password is too weak.';
+                        }
+                        
+                        showNotification(errorMessage, 'error');
+                        
+                        // Reset button
+                        this.innerHTML = originalText;
+                        this.disabled = false;
+                    });
+            });
+            
+            // Forgot password functionality
+            document.getElementById('forgot-password').addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Hide all forms
+                document.querySelectorAll('.form-container').forEach(form => {
+                    form.classList.remove('active');
+                });
+                
+                // Show forgot password form
+                document.getElementById('forgot-password-form').classList.add('active');
+                
+                // Update tabs
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+            });
+            
+            // Back to login from forgot password
+            document.getElementById('back-to-login').addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Hide all forms
+                document.querySelectorAll('.form-container').forEach(form => {
+                    form.classList.remove('active');
+                });
+                
+                // Show login form
+                document.getElementById('login-form').classList.add('active');
+                
+                // Update tabs
+                document.querySelectorAll('.tab').forEach(tab => {
+                    if (tab.getAttribute('data-tab') === 'login') {
+                        tab.classList.add('active');
+                    } else {
+                        tab.classList.remove('active');
+                    }
+                });
+            });
+            
+            // Reset password functionality
+            document.getElementById('reset-btn').addEventListener('click', function() {
+                const email = document.getElementById('reset-email').value;
+                
+                if (!email) {
+                    showNotification('Please enter your email address.', 'error');
+                    return;
+                }
+                
+                // Add loading animation
+                const originalText = this.innerHTML;
+                this.innerHTML = 'Sending reset email <i class="fas fa-spinner fa-spin"></i>';
+                this.disabled = true;
+                
+                // Firebase password reset
+                sendPasswordResetEmail(auth, email)
+                    .then(() => {
+                        showNotification('Password reset email sent! Check your inbox.', 'success');
+                        
+                        // Reset button
+                        this.innerHTML = originalText;
+                        this.disabled = false;
+                        
+                        // Go back to login after a delay
+                        setTimeout(() => {
+                            document.getElementById('back-to-login').click();
+                        }, 3000);
+                    })
+                    .catch((error) => {
+                        const errorCode = error.code;
+                        let errorMessage = 'An error occurred while sending reset email.';
+                        
+                        if (errorCode === 'auth/user-not-found') {
+                            errorMessage = 'No account found with this email.';
+                        } else if (errorCode === 'auth/invalid-email') {
+                            errorMessage = 'Invalid email address.';
+                        }
+                        
+                        showNotification(errorMessage, 'error');
+                        
+                        // Reset button
+                        this.innerHTML = originalText;
+                        this.disabled = false;
+                    });
+            });
+            
+            // Switch to login from signup
+            document.getElementById('switch-to-login').addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Update tabs
+                document.querySelectorAll('.tab').forEach(tab => {
+                    tab.classList.remove('active');
+                    if (tab.getAttribute('data-tab') === 'login') {
+                        tab.classList.add('active');
+                    }
+                });
+                
+                // Hide all forms
+                document.querySelectorAll('.form-container').forEach(form => {
+                    form.classList.remove('active');
+                });
+                
+                // Show login form
+                document.getElementById('login-form').classList.add('active');
+            });
+            
+            // Google authentication
+            document.getElementById('google-login').addEventListener('click', function() {
+                const provider = new GoogleAuthProvider();
+                
+                signInWithPopup(auth, provider)
+                    .then((result) => {
+                        // Signed in with Google
+                        const user = result.user;
+                        
+                        // Check if user profile exists, if not create one
+                        getDoc(doc(db, "users", user.uid))
+                            .then((docSnap) => {
+                                if (!docSnap.exists()) {
+                                    // Create user profile
+                                    const userProfile = {
+                                        email: user.email,
+                                        username: user.displayName || user.email.split('@')[0],
+                                        createdAt: new Date().toISOString(),
+                                        miningData: {
+                                            minedPxl: 0,
+                                            miningStartTime: null,
+                                            miningElapsedSeconds: 0,
+                                            walletBalance: 0,
+                                            miningRewards: 0,
+                                            referralBonuses: 0,
+                                            referralsCount: 0,
+                                            miningRatePxlPerHour: 1,
+                                            referralCode: generateReferralCode(),
+                                            usedReferralCode: null,
+                                            transactions: [],
+                                            lastMigrationTimestamp: null,
+                                            lastMiningDay: null
+                                        }
+                                    };
+                                    
+                                    return setDoc(doc(db, "users", user.uid), userProfile);
+                                }
+                            })
+                            .then(() => {
+                                showNotification('Successfully signed in with Google!', 'success');
+                                // Redirect after successful login
+                                setTimeout(() => {
+                                    window.location.href = 'mining.html';
+                                }, 2000);
+                            })
+                            .catch((error) => {
+                                console.error('Error creating user profile:', error);
+                                showNotification('Failed to create user profile.', 'error');
+                            });
+                    })
+                    .catch((error) => {
+                        console.error('Google sign-in error:', error);
+                        showNotification('Failed to sign in with Google.', 'error');
+                    });
+            });
+            
+            // GitHub authentication
+            document.getElementById('github-login').addEventListener('click', function() {
+                const provider = new GithubAuthProvider();
+                
+                signInWithPopup(auth, provider)
+                    .then((result) => {
+                        // Signed in with GitHub
+                        const user = result.user;
+                        
+                        // Check if user profile exists, if not create one
+                        getDoc(doc(db, "users", user.uid))
+                            .then((docSnap) => {
+                                if (!docSnap.exists()) {
+                                    // Create user profile
+                                    const userProfile = {
+                                        email: user.email,
+                                        username: user.displayName || user.email.split('@')[0],
+                                        createdAt: new Date().toISOString(),
+                                        miningData: {
+                                            minedPxl: 0,
+                                            miningStartTime: null,
+                                            miningElapsedSeconds: 0,
+                                            walletBalance: 0,
+                                            miningRewards: 0,
+                                            referralBonuses: 0,
+                                            referralsCount: 0,
+                                            miningRatePxlPerHour: 1,
+                                            referralCode: generateReferralCode(),
+                                            usedReferralCode: null,
+                                            transactions: [],
+                                            lastMigrationTimestamp: null,
+                                            lastMiningDay: null
+                                        }
+                                    };
+                                    
+                                    return setDoc(doc(db, "users", user.uid), userProfile);
+                                }
+                            })
+                            .then(() => {
+                                showNotification('Successfully signed in with GitHub!', 'success');
+                                // Redirect after successful login
+                                setTimeout(() => {
+                                    window.location.href = 'mining.html';
+                                }, 2000);
+                            })
+                            .catch((error) => {
+                                console.error('Error creating user profile:', error);
+                                showNotification('Failed to create user profile.', 'error');
+                            });
+                    })
+                    .catch((error) => {
+                        console.error('GitHub sign-in error:', error);
+                        showNotification('Failed to sign in with GitHub.', 'error');
+                    });
+            });
+            
+            // Phone authentication placeholder
+            document.getElementById('phone-login').addEventListener('click', function() {
+                showNotification('Phone authentication will be implemented soon.', 'success');
+            });
+            
+            // Check if user is already logged in
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    // User is signed in
+                    console.log('User is already logged in:', user);
+                    // Redirect to mining page if already logged in
+                    window.location.href = 'mining.html';
+                } else {
+                    // User is signed out
+                    console.log('User is not logged in');
+                }
+            });
+        });
+        
+        // Generate referral code
+        function generateReferralCode() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let result = '';
+            for (let i = 0; i < 8; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+        
+        // Notification function
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            const icon = notification.querySelector('i');
+            const text = notification.querySelector('span');
+            
+            text.textContent = message;
+            
+            if (type === 'success') {
+                notification.classList.remove('error');
+                icon.className = 'fas fa-check-circle';
+            } else {
+                notification.classList.add('error');
+                icon.className = 'fas fa-exclamation-circle';
+            }
+            
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
