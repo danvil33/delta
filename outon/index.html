@@ -1,12 +1,45 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Outon AI Scam Detector</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Outon AI Scam Detector</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#07111f;color:#eef5ff}.wrap{max-width:980px;margin:0 auto;padding:32px 18px}.hero{background:linear-gradient(135deg,#10223c,#0b1728);border:1px solid #223a5e;border-radius:24px;padding:28px;box-shadow:0 20px 50px rgba(0,0,0,.25)}h1{font-size:42px;margin:0 0 8px}.sub{color:#a9bdd8;margin:0 0 22px}.grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;margin-top:20px}@media(max-width:780px){.grid{grid-template-columns:1fr}h1{font-size:32px}}textarea{width:100%;min-height:220px;border-radius:18px;border:1px solid #2c456b;background:#08182b;color:white;padding:16px;font-size:16px;outline:none}.card{background:#0b1a2e;border:1px solid #223a5e;border-radius:20px;padding:18px}.score{font-size:48px;font-weight:800}.badge{display:inline-block;padding:8px 12px;border-radius:999px;background:#f59e0b;color:#111827;font-weight:800}.safe{background:#22c55e}.low{background:#84cc16}.medium{background:#f59e0b}.high{background:#ef4444;color:white}button{background:#ff8c00;color:#101827;border:0;border-radius:14px;padding:13px 18px;font-weight:800;cursor:pointer;margin-top:10px}.muted{color:#9fb2cc}.list{padding-left:20px}.footer{margin-top:16px;color:#8ea6c5;font-size:13px}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <h1>Outon AI Scam Detector</h1>
+      <p class="sub">Paste a suspicious SMS, WhatsApp message, email, or investment pitch. Outon scans scam warning signs instantly.</p>
+      <div class="grid">
+        <div class="card">
+          <label for="message"><strong>Suspicious message</strong></label>
+          <textarea id="message" placeholder="Example: Urgent! Your account is locked. Send OTP/password now to verify..."></textarea>
+          <button onclick="scan()">Analyze scam risk</button>
+        </div>
+        <div class="card">
+          <div id="badge" class="badge safe">No message</div>
+          <div class="score"><span id="score">0</span>/100</div>
+          <p id="summary" class="muted">Paste a message and click analyze.</p>
+          <h3>Warning signs</h3>
+          <ul id="reasons" class="list"><li>No warning signs yet.</li></ul>
+        </div>
+      </div>
+      <p class="footer">Safety note: This tool gives guidance only. Never share OTP, password, PIN, recovery phrase, or send money because of pressure.</p>
+    </section>
+  </main>
+<script>
+const rules=[
+{label:'Asks for password, PIN, OTP, seed phrase, or private key',weight:35,patterns:[/\b(password|pin|otp|one.?time code|verification code|seed phrase|private key|recovery phrase)\b/i]},
+{label:'Uses urgency, fear, account lock, or suspension pressure',weight:18,patterns:[/\b(urgent|immediately|within \d+ minutes|act now|last warning|account.*blocked|suspended|locked)\b/i]},
+{label:'Promises unrealistic profit or investment returns',weight:24,patterns:[/\b(guaranteed profit|double your money|risk.?free|forex signal|crypto investment|bitcoin mining|make \$?\d+.*daily|\d+% profit)\b/i]},
+{label:'Requests money transfer or payment to unknown person',weight:20,patterns:[/\b(send money|transfer|mpesa|m-pesa|tigopesa|airtel money|pay now|deposit)\b/i]},
+{label:'Contains suspicious link wording',weight:15,patterns:[/\b(click link|verify here|login here|claim now|free prize|winner)\b/i]}
+];
+function analyze(text){let score=0,reasons=[];text=(text||'').trim();if(!text)return{score:0,level:'No message',reasons:[],cls:'safe',summary:'Paste a message and click analyze.'};for(const r of rules){if(r.patterns.some(p=>p.test(text))){score+=r.weight;reasons.push(r.label)}}score=Math.min(100,score);let level='Likely Safe',cls='safe',summary='Few scam signals found. Still be careful with unknown senders.';if(score>=75){level='High Risk';cls='high';summary='This message has strong scam indicators. Do not respond or pay.'}else if(score>=45){level='Medium Risk';cls='medium';summary='This message is suspicious. Verify from an official source first.'}else if(score>=20){level='Low Risk';cls='low';summary='Some warning signs detected. Be careful.'}return{score,level,reasons,cls,summary}}
+function scan(){const res=analyze(document.getElementById('message').value);document.getElementById('score').textContent=res.score;const badge=document.getElementById('badge');badge.textContent=res.level;badge.className='badge '+res.cls;document.getElementById('summary').textContent=res.summary;const ul=document.getElementById('reasons');ul.innerHTML='';(res.reasons.length?res.reasons:['No warning signs detected.']).forEach(x=>{const li=document.createElement('li');li.textContent=x;ul.appendChild(li)})}
+</script>
+</body>
 </html>
