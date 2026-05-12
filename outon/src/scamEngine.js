@@ -1,0 +1,6 @@
+const rules = [
+  { label: 'Requests your password, PIN, OTP, seed phrase, or private key', weight: 35, patterns: [/\\b(password|pin|otp|one.?time code|verification code|seed phrase|private key|recovery phrase)\\b/i] },
+  { label: 'Creates urgency or fear pressure', weight: 18, patterns: [/\\b(urgent|immediately|within \\d+ minutes|act now|last warning|account.*blocked|suspended|locked)\\b/i] },
+  { label: 'Promises unrealistic profit, forex, crypto, or investment returns', weight: 24, patterns: [/\\b(guaranteed profit|double your money|risk.?free|forex signal|crypto investment|bitcoin mining|make \\$?\\d+.*daily|\\d+% profit)\\b/i] },
+];
+export function analyzeScam(text){const clean=String(text||'').trim();if(!clean){return {score:0,level:'No message',reasons:[],advice:['Paste a suspicious message to scan it.']};}let score=0;const matches=[];for(const rule of rules){if(rule.patterns.some((p)=>p.test(clean))){matches.push(rule.label);score+=rule.weight;}}score=Math.max(0,Math.min(100,score));const level=score>=75?'High Risk':score>=45?'Medium Risk':score>=20?'Low Risk':'Likely Safe';return {score,level,reasons:matches,advice:['Do not share passwords, OTPs, or send money to unknown people.']};}
